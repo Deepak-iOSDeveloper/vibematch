@@ -1,6 +1,14 @@
 {
   "version": 2,
-  "buildCommand": "bash build_files.sh",
+  "builds": [
+    {
+      "src": "vibematch/wsgi.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "15mb"
+      }
+    }
+  ],
   "routes": [
     {
       "src": "/static/(.*)",
