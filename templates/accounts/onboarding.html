@@ -1,0 +1,368 @@
+{% extends "base.html" %}
+{% block title %}Setup Profile — Step {{ step }} — VibeMatch{% endblock %}
+{% block body %}
+<div style="min-height:100vh;background:#fff;font-family:'DM Sans',sans-serif;max-width:480px;margin:0 auto;box-shadow:0 0 40px rgba(0,0,0,0.08);display:flex;flex-direction:column;">
+
+  <!-- Header -->
+  <div style="background:#FBEAF0;padding:20px 20px 0;">
+    <div style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:#1A1A18;margin-bottom:4px;">Vibe<span style="color:#D4537E;">Match</span></div>
+    <div style="font-size:0.82rem;color:#72243E;margin-bottom:12px;">Step {{ step }} of 6 — {{ step_name }}</div>
+    <div style="display:flex;gap:6px;padding-bottom:16px;">
+      {% for s in steps %}
+      <div style="height:4px;flex:1;border-radius:999px;background:{% if s <= step %}#D4537E{% else %}#F4C0D1{% endif %};transition:background 0.3s;"></div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Flash messages -->
+  {% if messages %}
+  <div style="padding:12px 20px 0;">
+    {% for message in messages %}
+    <div style="background:#FCEBEB;color:#A32D2D;border-radius:10px;padding:10px 14px;font-size:0.85rem;margin-bottom:8px;">{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Form content -->
+  <div style="flex:1;padding:24px 20px;overflow-y:auto;">
+    <form method="post" id="onboarding-form" style="display:flex;flex-direction:column;gap:16px;">
+      {% csrf_token %}
+
+      {% if step == 1 %}
+      <div>
+        <h2 style="font-family:'DM Serif Display',serif;font-size:1.4rem;font-weight:normal;margin-bottom:4px;">Tell us who you are</h2>
+        <p style="font-size:0.88rem;color:#5F5E5A;">Your basic details — no photos required</p>
+      </div>
+      <div class="field-group">
+        <label>Full Name</label>
+        <input type="text" name="full_name" value="{{ request.user.full_name }}" placeholder="Your full name" required/>
+      </div>
+      <div class="field-group">
+        <label>Age (18+)</label>
+        <input type="number" name="age" value="{{ request.user.age|default:'' }}" min="18" max="35" placeholder="Your age" required/>
+      </div>
+      <div class="field-group">
+        <label>Gender</label>
+        <div class="chip-group">
+          {% for val,label in form.fields.gender.choices %}
+          {% if val %}
+          <label class="chip-label">
+            <input type="radio" name="gender" value="{{ val }}" {% if request.user.gender == val %}checked{% endif %} hidden/>
+            <span class="chip">{{ label }}</span>
+          </label>
+          {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Pronouns <span style="color:#888780;">(optional)</span></label>
+        <input type="text" name="pronouns" value="{{ request.user.pronouns }}" placeholder="e.g. she/her, he/him, they/them"/>
+      </div>
+      <div class="field-group">
+        <label>Avatar Color</label>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          {% for color in avatar_colors %}
+          <label style="cursor:pointer;">
+            <input type="radio" name="avatar_color" value="{{ color }}" {% if request.user.avatar_color == color or forloop.first and not request.user.avatar_color %}checked{% endif %} hidden/>
+            <div class="avatar-color-swatch" style="background:{{ color }};" data-color="{{ color }}">{{ request.user.avatar_initials|default:"VM" }}</div>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      {% elif step == 2 %}
+      <div>
+        <h2 style="font-family:'DM Serif Display',serif;font-size:1.4rem;font-weight:normal;margin-bottom:4px;">Your academic life</h2>
+        <p style="font-size:0.88rem;color:#5F5E5A;">Helps connect you with the right people</p>
+      </div>
+      <div class="field-group">
+        <label>College / University</label>
+        <input type="text" name="college_name" value="{{ request.user.college_name }}" placeholder="e.g. IIT Delhi, LPU, BITS Pilani" required/>
+      </div>
+      <div class="field-group">
+        <label>Stream / Department</label>
+        <select name="stream" required>
+          <option value="">Select your stream</option>
+          {% for val,label in form.fields.stream.choices %}
+          {% if val %}<option value="{{ val }}" {% if request.user.stream == val %}selected{% endif %}>{{ label }}</option>{% endif %}
+          {% endfor %}
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="field-group">
+          <label>Current Year</label>
+          <select name="year_of_study" required>
+            <option value="">Year</option>
+            {% for val,label in form.fields.year_of_study.choices %}
+            {% if val %}<option value="{{ val }}" {% if request.user.year_of_study == val %}selected{% endif %}>{{ label }}</option>{% endif %}
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field-group">
+          <label>Graduating In</label>
+          <select name="graduation_year">
+            <option value="">Year</option>
+            {% for y in grad_years %}
+            <option value="{{ y }}" {% if request.user.graduation_year == y %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="field-group">
+        <label>City</label>
+        <input type="text" name="city" value="{{ request.user.city }}" placeholder="Your city"/>
+      </div>
+      <div class="field-group">
+        <label>State</label>
+        <select name="state" required>
+          {% for val,label in states %}
+          <option value="{{ val }}" {% if request.user.state == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field-group">
+        <label>Region</label>
+        <select name="region">
+          {% for val,label in form.fields.region.choices %}
+          <option value="{{ val }}" {% if request.user.region == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      {% elif step == 3 %}
+      <div>
+        <h2 style="font-family:'DM Serif Display',serif;font-size:1.4rem;font-weight:normal;margin-bottom:4px;">Your personality</h2>
+        <p style="font-size:0.88rem;color:#5F5E5A;">Builds your vibe score — be honest!</p>
+      </div>
+      <div class="field-group">
+        <label>Love Language</label>
+        <div class="chip-group">
+          {% for val,label in form.fields.love_language.choices %}
+          {% if val %}
+          <label class="chip-label">
+            <input type="radio" name="love_language" value="{{ val }}" {% if request.user.love_language == val %}checked{% endif %} hidden/>
+            <span class="chip">{{ label }}</span>
+          </label>
+          {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Humor Style</label>
+        <div class="chip-group">
+          {% for val,label in form.fields.humor_style.choices %}
+          {% if val %}
+          <label class="chip-label">
+            <input type="radio" name="humor_style" value="{{ val }}" {% if request.user.humor_style == val %}checked{% endif %} hidden/>
+            <span class="chip">{{ label }}</span>
+          </label>
+          {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Communication Style</label>
+        <div class="chip-group">
+          {% for val,label in form.fields.communication_style.choices %}
+          {% if val %}
+          <label class="chip-label">
+            <input type="radio" name="communication_style" value="{{ val }}" {% if request.user.communication_style == val %}checked{% endif %} hidden/>
+            <span class="chip">{{ label }}</span>
+          </label>
+          {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      <div class="field-group">
+        <label>What are you looking for?</label>
+        <div class="chip-group">
+          {% for val,label in form.fields.relationship_goal.choices %}
+          {% if val %}
+          <label class="chip-label">
+            <input type="radio" name="relationship_goal" value="{{ val }}" {% if request.user.relationship_goal == val %}checked{% endif %} hidden/>
+            <span class="chip">{{ label }}</span>
+          </label>
+          {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      <div class="field-group">
+        <label>About you <span style="color:#888780;">(optional, max 300 chars)</span></label>
+        <textarea name="bio" maxlength="300" placeholder="A few sentences about yourself..." rows="3">{{ request.user.bio }}</textarea>
+      </div>
+
+      {% elif step == 4 %}
+      <div>
+        <h2 style="font-family:'DM Serif Display',serif;font-size:1.4rem;font-weight:normal;margin-bottom:4px;">Your interests</h2>
+        <p style="font-size:0.88rem;color:#5F5E5A;">Pick 3–8 things you genuinely love</p>
+      </div>
+      <div style="background:#FBEAF0;border-radius:10px;padding:10px 14px;font-size:0.82rem;color:#72243E;">
+        Selected: <strong id="interest-count">{{ selected_interests|length }}</strong>/8
+      </div>
+      <div class="chip-group" style="gap:8px;">
+        {% for val,label in form.fields.interests.choices %}
+        <label class="chip-label interest-chip-label">
+          <input type="checkbox" name="interests" value="{{ val }}" {% if val in selected_interests %}checked{% endif %} hidden class="interest-cb"/>
+          <span class="chip {% if val in selected_interests %}chip-selected{% endif %}">{{ label }}</span>
+        </label>
+        {% endfor %}
+      </div>
+
+      {% elif step == 5 %}
+      <div>
+        <h2 style="font-family:'DM Serif Display',serif;font-size:1.4rem;font-weight:normal;margin-bottom:4px;">Your preferences</h2>
+        <p style="font-size:0.88rem;color:#5F5E5A;">Who would you like to connect with?</p>
+      </div>
+      <div class="field-group">
+        <label>I'm interested in</label>
+        <div class="chip-group">
+          {% for val,label in pref_gender_choices %}
+          <label class="chip-label">
+            <input type="checkbox" name="preferred_gender_choices" value="{{ val }}" {% if val in selected_pref_genders %}checked{% endif %} hidden/>
+            <span class="chip {% if val in selected_pref_genders %}chip-selected{% endif %}">{{ label }}</span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Preferred region</label>
+        <select name="preferred_region">
+          {% for val,label in region_choices %}
+<option value="{{ val }}" {% if request.user.preferred_region == val %}selected{% endif %}>{{ label }}</option>
+{% endfor %}
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="field-group">
+          <label>Min age</label>
+          <input type="number" name="age_min" value="{{ request.user.age_min|default:18 }}" min="18" max="35"/>
+        </div>
+        <div class="field-group">
+          <label>Max age</label>
+          <input type="number" name="age_max" value="{{ request.user.age_max|default:30 }}" min="18" max="35"/>
+        </div>
+      </div>
+      <label style="display:flex;align-items:center;gap:12px;cursor:pointer;">
+        <input type="checkbox" name="long_distance_ready" {% if request.user.long_distance_ready %}checked{% endif %} style="width:18px;height:18px;accent-color:#D4537E;cursor:pointer;"/>
+        <span style="font-size:0.9rem;">Open to long-distance connections</span>
+      </label>
+
+      {% elif step == 6 %}
+      <div>
+        <h2 style="font-family:'DM Serif Display',serif;font-size:1.4rem;font-weight:normal;margin-bottom:4px;">Your icebreaker</h2>
+        <p style="font-size:0.88rem;color:#5F5E5A;">The first thing people see. Make it you.</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <p style="font-size:0.82rem;color:#5F5E5A;">Pick a suggestion or write your own:</p>
+        {% for example in icebreaker_examples %}
+        <div class="icebreaker-example" data-text="{{ example }}" style="padding:10px 14px;border-radius:10px;border:1px solid rgba(0,0,0,0.12);cursor:pointer;font-size:0.85rem;font-style:italic;line-height:1.5;transition:all 0.15s;">"{{ example }}"</div>
+        {% endfor %}
+      </div>
+      <div class="field-group">
+        <label>Or write your own (min. 20 characters)</label>
+        <textarea name="icebreaker" id="icebreaker-input" maxlength="200" rows="3" placeholder="Something fun, honest, or a little weird...">{{ request.user.icebreaker }}</textarea>
+        <span style="font-size:0.75rem;color:#888780;" id="ib-count">{{ request.user.icebreaker|length }}/200</span>
+      </div>
+      <div id="ib-preview" style="background:#E1F5EE;border-radius:10px;padding:14px;display:{% if request.user.icebreaker|length >= 20 %}block{% else %}none{% endif %};">
+        <div style="font-size:0.78rem;color:#085041;font-weight:500;margin-bottom:6px;">Preview on your card:</div>
+        <div id="ib-preview-text" style="font-size:0.88rem;font-style:italic;color:#1A1A18;line-height:1.6;">"{{ request.user.icebreaker }}"</div>
+      </div>
+      {% endif %}
+
+    </form>
+  </div>
+
+  <!-- Footer buttons -->
+  <div style="padding:16px 20px;border-top:1px solid rgba(0,0,0,0.08);display:flex;gap:12px;background:#fff;">
+    {% if step > 1 %}
+    <a href="{% url 'onboarding_step' step|add:'-1' %}" style="padding:12px 20px;border:1px solid rgba(0,0,0,0.15);border-radius:999px;text-decoration:none;color:#1A1A18;font-size:0.9rem;font-weight:500;">← Back</a>
+    {% endif %}
+    <button type="submit" form="onboarding-form"
+      style="flex:1;background:#D4537E;color:white;border:none;border-radius:999px;padding:13px;font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:500;cursor:pointer;">
+      {% if step == 6 %}Launch my profile 🚀{% else %}Continue →{% endif %}
+    </button>
+  </div>
+</div>
+
+<script>
+// Chip toggle for radio inputs
+document.querySelectorAll('.chip-label input[type="radio"]').forEach(input => {
+  input.addEventListener('change', () => {
+    const name = input.name;
+    document.querySelectorAll(`input[name="${name}"]`).forEach(i => {
+      i.closest('.chip-label').querySelector('.chip').classList.remove('chip-selected');
+    });
+    input.closest('.chip-label').querySelector('.chip').classList.add('chip-selected');
+  });
+  // Init
+  if(input.checked) input.closest('.chip-label').querySelector('.chip').classList.add('chip-selected');
+});
+
+// Chip toggle for checkbox inputs (preferences)
+document.querySelectorAll('.chip-label input[type="checkbox"]:not(.interest-cb)').forEach(input => {
+  input.addEventListener('change', () => {
+    const chip = input.closest('.chip-label').querySelector('.chip');
+    chip.classList.toggle('chip-selected', input.checked);
+  });
+});
+
+// Avatar color selection
+document.querySelectorAll('.avatar-color-swatch').forEach(swatch => {
+  const input = swatch.previousElementSibling || swatch.parentElement.querySelector('input');
+  const parentLabel = swatch.closest('label');
+  if(parentLabel){
+    const radio = parentLabel.querySelector('input[type="radio"]');
+    if(radio && radio.checked) swatch.style.border = '3px solid #1A1A18';
+    parentLabel.addEventListener('click', () => {
+      document.querySelectorAll('.avatar-color-swatch').forEach(s => s.style.border = '3px solid transparent');
+      swatch.style.border = '3px solid #1A1A18';
+    });
+  }
+});
+
+// Interest chip counter
+const interestCbs = document.querySelectorAll('.interest-cb');
+const countEl = document.getElementById('interest-count');
+interestCbs.forEach(cb => {
+  cb.addEventListener('change', () => {
+    const checked = document.querySelectorAll('.interest-cb:checked').length;
+    if(countEl) countEl.textContent = checked;
+    const chip = cb.closest('.chip-label').querySelector('.chip');
+    if(cb.checked && checked <= 8){
+      chip.classList.add('chip-selected');
+    } else if(!cb.checked){
+      chip.classList.remove('chip-selected');
+    } else {
+      cb.checked = false;
+    }
+  });
+});
+
+// Icebreaker examples
+document.querySelectorAll('.icebreaker-example').forEach(el => {
+  el.addEventListener('click', () => {
+    const input = document.getElementById('icebreaker-input');
+    if(input){ input.value = el.dataset.text; input.dispatchEvent(new Event('input')); }
+    document.querySelectorAll('.icebreaker-example').forEach(e => e.style.borderColor = 'rgba(0,0,0,0.12)');
+    el.style.borderColor = '#D4537E';
+    el.style.background = '#FBEAF0';
+  });
+});
+
+// Icebreaker counter and preview
+const ibInput = document.getElementById('icebreaker-input');
+const ibCount = document.getElementById('ib-count');
+const ibPreview = document.getElementById('ib-preview');
+const ibPreviewText = document.getElementById('ib-preview-text');
+if(ibInput){
+  ibInput.addEventListener('input', () => {
+    const len = ibInput.value.length;
+    if(ibCount) ibCount.textContent = len + '/200';
+    if(ibPreview && ibPreviewText){
+      ibPreview.style.display = len >= 20 ? 'block' : 'none';
+      ibPreviewText.textContent = '"' + ibInput.value + '"';
+    }
+  });
+}
+</script>
+{% endblock %}

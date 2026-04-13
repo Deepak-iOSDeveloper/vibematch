@@ -1,0 +1,253 @@
+{% extends "app_base.html" %}
+{% block title %}Discover — VibeMatch{% endblock %}
+
+{% block top_nav_actions %}
+<button onclick="document.getElementById('prompt-modal').style.display='flex'" class="icon-btn" title="Today's prompt">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+</button>
+<button onclick="document.getElementById('filter-bar').classList.toggle('hidden')" class="icon-btn">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+</button>
+{% endblock %}
+
+{% block content %}
+<!-- Filter bar -->
+<div id="filter-bar" class="hidden" style="padding:12px 16px;background:#FBEAF0;border-bottom:1px solid #F4C0D1;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+  <span style="font-size:0.8rem;font-weight:500;color:#72243E;">Region:</span>
+  {% for val,label in region_choices %}
+  <a href="?region={{ val }}" style="padding:4px 12px;border-radius:999px;font-size:0.78rem;font-weight:500;text-decoration:none;{% if region_filter == val or not region_filter and val == '' %}background:#D4537E;color:white;{% else %}background:#fff;color:#72243E;border:1px solid #F4C0D1;{% endif %}">{{ label }}</a>
+  {% endfor %}
+</div>
+
+<!-- Daily prompt banner -->
+{% if today_prompt and not already_answered %}
+<div onclick="document.getElementById('prompt-modal').style.display='flex'"
+  style="margin:12px 16px 0;background:#E1F5EE;border-radius:12px;padding:12px 14px;border:1px solid rgba(29,158,117,0.2);cursor:pointer;">
+  <div style="font-size:0.75rem;font-weight:500;color:#1D9E75;margin-bottom:3px;">TODAY'S QUESTION</div>
+  <div style="font-size:0.88rem;color:#1A1A18;line-height:1.5;">"{{ today_prompt.prompt_text }}"</div>
+  <div style="font-size:0.75rem;color:#085041;margin-top:4px;">Tap to answer → adds to your profile</div>
+</div>
+{% endif %}
+
+<!-- Profiles -->
+<div style="padding:12px 16px;display:flex;flex-direction:column;gap:14px;">
+  {% if not profiles %}
+  <div style="text-align:center;padding:64px 24px;color:#888780;">
+    <div style="font-size:2.5rem;margin-bottom:12px;">🌱</div>
+    <div style="font-weight:500;font-size:1rem;color:#1A1A18;margin-bottom:6px;">No profiles yet</div>
+    <p style="font-size:0.88rem;line-height:1.6;">Try changing filters or come back later as more students join</p>
+    <a href="{% url 'discover' %}" style="display:inline-block;margin-top:16px;padding:10px 20px;background:#FBEAF0;color:#72243E;border-radius:999px;text-decoration:none;font-size:0.85rem;font-weight:500;">Reset filters</a>
+  </div>
+  {% endif %}
+
+  {% for profile_user, score in profiles %}
+  <div class="profile-card">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div class="avatar avatar-lg" style="background:{{ profile_user.avatar_color }}22;color:{{ profile_user.avatar_color }};">
+        {{ profile_user.avatar_initials|default:profile_user.full_name.0 }}
+      </div>
+      <div style="flex:1;">
+        <div style="font-weight:500;font-size:1rem;">{{ profile_user.full_name }}{% if profile_user.age %}, {{ profile_user.age }}{% endif %}</div>
+        <div style="font-size:0.82rem;color:#5F5E5A;">{{ profile_user.college_name }} · {{ profile_user.get_stream_display }}</div>
+        <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;">
+          {% if profile_user.is_verified %}<span class="badge badge-verified">✓ Verified</span>{% endif %}
+          {% if profile_user.city %}<span style="font-size:0.72rem;color:#888780;">📍 {{ profile_user.city }}</span>{% endif %}
+          {% if profile_user.long_distance_ready %}<span class="badge" style="background:#E6F1FB;color:#0C447C;">✈ Long distance ok</span>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Photo locked -->
+    <div style="background:#F8F7F4;border:1px dashed rgba(0,0,0,0.12);border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:center;gap:8px;color:#888780;font-size:0.82rem;">
+      🔒 Photo visible after mutual reveal
+    </div>
+
+    <!-- Vibe score -->
+    <div style="background:#F8F7F4;border-radius:12px;padding:12px;">
+      <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:4px;">
+        <span style="color:#5F5E5A;">Overall Vibe Score</span>
+        <span style="font-weight:500;color:{% if score.total >= 70 %}#1D9E75{% elif score.total >= 45 %}#D4537E{% else %}#888780{% endif %};">{{ score.total }}%</span>
+      </div>
+      <div style="height:5px;background:#E2E0D8;border-radius:999px;overflow:hidden;margin-bottom:10px;">
+        <div style="width:{{ score.total }}%;height:100%;background:linear-gradient(90deg,#ED93B1,#D4537E);border-radius:999px;"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+        <div style="text-align:center;background:#fff;border-radius:8px;padding:8px;">
+          <div style="font-size:0.9rem;font-weight:500;color:#D4537E;">{{ score.interests }}%</div>
+          <div style="font-size:0.7rem;color:#888780;">Interests</div>
+        </div>
+        <div style="text-align:center;background:#fff;border-radius:8px;padding:8px;">
+          <div style="font-size:0.9rem;font-weight:500;color:#D4537E;">{{ score.values }}%</div>
+          <div style="font-size:0.7rem;color:#888780;">Values</div>
+        </div>
+        <div style="text-align:center;background:#fff;border-radius:8px;padding:8px;">
+          <div style="font-size:0.9rem;font-weight:500;color:#D4537E;">{{ score.humor }}%</div>
+          <div style="font-size:0.7rem;color:#888780;">Humor</div>
+        </div>
+      </div>
+      {% if score.shared_interests %}
+      <div style="margin-top:8px;font-size:0.78rem;color:#5F5E5A;">Both into: <strong style="color:#D4537E;">{{ score.shared_interests|join:", " }}</strong></div>
+      {% endif %}
+    </div>
+
+    <!-- Interests -->
+    <div style="display:flex;flex-wrap:wrap;gap:6px;">
+      {% for interest in profile_user.get_interests_list %}
+      <span style="padding:4px 10px;border-radius:999px;font-size:0.78rem;font-weight:500;{% if interest in score.shared_interests %}background:#FBEAF0;color:#72243E;{% else %}background:#F1EFE8;color:#444441;{% endif %}">{{ interest }}</span>
+      {% endfor %}
+    </div>
+
+    <!-- Icebreaker -->
+    {% if profile_user.icebreaker %}
+    <div style="background:#FBEAF0;border-radius:10px;padding:12px;font-size:0.88rem;color:#72243E;font-style:italic;line-height:1.6;">"{{ profile_user.icebreaker }}"</div>
+    {% endif %}
+
+    <!-- Bio -->
+    {% if profile_user.bio %}
+    <div style="font-size:0.88rem;color:#5F5E5A;line-height:1.6;">{{ profile_user.bio }}</div>
+    {% endif %}
+
+    <!-- Tags -->
+    <div style="display:flex;flex-wrap:wrap;gap:6px;">
+      {% if profile_user.relationship_goal %}<span class="badge" style="background:#E1F5EE;color:#085041;">{{ profile_user.get_relationship_goal_display }}</span>{% endif %}
+      {% if profile_user.love_language %}<span class="badge" style="background:#E6F1FB;color:#0C447C;">{{ profile_user.get_love_language_display }}</span>{% endif %}
+      {% if profile_user.humor_style %}<span class="badge" style="background:#FAEEDA;color:#633806;">{{ profile_user.get_humor_style_display }} humor</span>{% endif %}
+    </div>
+
+    <!-- Action -->
+    <button onclick="openStarterModal('{{ profile_user.id }}', '{{ profile_user.full_name|escapejs }}', '{{ score.shared_interests|join:',' }}')"
+      style="width:100%;background:#D4537E;color:white;border:none;border-radius:999px;padding:13px;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;cursor:pointer;">
+      ✉ Send conversation starter
+    </button>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Starter Modal -->
+<div id="starter-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:flex-end;justify-content:center;">
+  <div style="background:#fff;border-radius:24px 24px 0 0;padding:24px 20px 32px;width:100%;max-width:480px;max-height:80vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;font-weight:normal;" id="starter-modal-title">Send a starter</h3>
+      <button onclick="document.getElementById('starter-modal').style.display='none'" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:#888780;">✕</button>
+    </div>
+    <p style="font-size:0.85rem;color:#5F5E5A;margin-bottom:12px;">No generic "hi" please. Pick a suggestion or write something meaningful:</p>
+    <div id="starter-suggestions" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;"></div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">
+      <label style="font-size:0.82rem;font-weight:500;color:#5F5E5A;">Or write your own starter</label>
+      <textarea id="starter-text" maxlength="300" placeholder="Something genuine and interesting..." rows="3"
+        style="padding:12px 14px;border:1px solid rgba(0,0,0,0.15);border-radius:12px;font-family:'DM Sans',sans-serif;font-size:0.9rem;outline:none;resize:none;"></textarea>
+      <span id="starter-count" style="font-size:0.75rem;color:#888780;">0/300</span>
+    </div>
+    <button id="send-starter-btn" onclick="sendStarter()"
+      style="width:100%;background:#D4537E;color:white;border:none;border-radius:999px;padding:13px;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;cursor:pointer;">
+      Send starter →
+    </button>
+  </div>
+</div>
+
+<!-- Prompt Modal -->
+<div id="prompt-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:flex-end;justify-content:center;">
+  <div style="background:#fff;border-radius:24px 24px 0 0;padding:24px 20px 32px;width:100%;max-width:480px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <span class="badge badge-verified">Today's Question</span>
+      <button onclick="document.getElementById('prompt-modal').style.display='none'" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:#888780;">✕</button>
+    </div>
+    {% if today_prompt %}
+    <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;font-weight:normal;margin-bottom:16px;line-height:1.4;">"{{ today_prompt.prompt_text }}"</h3>
+    <textarea id="prompt-answer" maxlength="500" rows="4" placeholder="Your honest answer..."
+      style="width:100%;padding:12px 14px;border:1px solid rgba(0,0,0,0.15);border-radius:12px;font-family:'DM Sans',sans-serif;font-size:0.9rem;outline:none;resize:none;margin-bottom:8px;box-sizing:border-box;"></textarea>
+    <p style="font-size:0.78rem;color:#888780;margin-bottom:12px;">Your answer is added to your profile to help others understand you better.</p>
+    <button onclick="submitPromptAnswer({{ today_prompt.id }})"
+      style="width:100%;background:#1D9E75;color:white;border:none;border-radius:999px;padding:13px;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;cursor:pointer;">
+      Save answer to profile
+    </button>
+    {% else %}
+    <p style="color:#5F5E5A;">No prompt for today. Check back tomorrow!</p>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+const STARTERS = [
+  "I noticed you're into {interest} — what got you started with that?",
+  "Your icebreaker made me laugh. Tell me more about that story.",
+  "We both seem to like {interest}. What's your current obsession within that space?",
+  "If we had one hour together in your city, what would you show me?",
+  "Your relationship goal resonates with mine. What made you decide to join VibeMatch?"
+];
+
+let currentToUserId = null;
+
+function openStarterModal(userId, userName, sharedInterests) {
+  currentToUserId = userId;
+  document.getElementById('starter-modal-title').textContent = 'Send a starter to ' + userName.split(' ')[0];
+  const interests = sharedInterests ? sharedInterests.split(',') : [];
+  const topInterest = interests[0] || 'something you love';
+  const suggestionsEl = document.getElementById('starter-suggestions');
+  suggestionsEl.innerHTML = '';
+  STARTERS.forEach(s => {
+    const text = s.replace('{interest}', topInterest);
+    const btn = document.createElement('button');
+    btn.textContent = text;
+    btn.style.cssText = 'text-align:left;padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,0.12);background:#fff;color:#1A1A18;font-family:DM Sans,sans-serif;font-size:0.84rem;cursor:pointer;line-height:1.5;font-style:italic;width:100%;';
+    btn.onclick = () => {
+      document.getElementById('starter-text').value = text;
+      document.getElementById('starter-count').textContent = text.length + '/300';
+      suggestionsEl.querySelectorAll('button').forEach(b => { b.style.borderColor='rgba(0,0,0,0.12)'; b.style.background='#fff'; });
+      btn.style.borderColor = '#D4537E'; btn.style.background = '#FBEAF0';
+    };
+    suggestionsEl.appendChild(btn);
+  });
+  document.getElementById('starter-text').value = '';
+  document.getElementById('starter-count').textContent = '0/300';
+  document.getElementById('starter-modal').style.display = 'flex';
+}
+
+document.getElementById('starter-text').addEventListener('input', function(){
+  document.getElementById('starter-count').textContent = this.value.length + '/300';
+});
+
+function sendStarter() {
+  const text = document.getElementById('starter-text').value.trim();
+  if(!text || text.length < 10) { alert('Write a meaningful starter (at least 10 characters)'); return; }
+  const btn = document.getElementById('send-starter-btn');
+  btn.textContent = 'Sending...'; btn.disabled = true;
+  fetch('{% url "send_starter" %}', {
+    method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},
+    body: JSON.stringify({to_user_id: currentToUserId, starter_text: text})
+  }).then(r=>r.json()).then(d=>{
+    if(d.success){
+      document.getElementById('starter-modal').style.display='none';
+      showToast('Starter sent! 🚀 Waiting for their response.');
+      setTimeout(()=>location.reload(), 1500);
+    } else {
+      showToast(d.error || 'Failed to send', 'error');
+      btn.textContent = 'Send starter →'; btn.disabled = false;
+    }
+  }).catch(()=>{ showToast('Network error. Try again.', 'error'); btn.textContent = 'Send starter →'; btn.disabled = false; });
+}
+
+function submitPromptAnswer(promptId) {
+  const text = document.getElementById('prompt-answer').value.trim();
+  if(!text || text.length < 10) { alert('Write at least a sentence!'); return; }
+  fetch('{% url "submit_prompt_answer" %}', {
+    method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},
+    body: JSON.stringify({prompt_id: promptId, answer_text: text})
+  }).then(r=>r.json()).then(d=>{
+    if(d.success){
+      document.getElementById('prompt-modal').style.display='none';
+      showToast('Answer saved to your profile! 📝');
+    } else { showToast(d.error || 'Failed', 'error'); }
+  });
+}
+
+function showToast(msg, type='success'){
+  const t = document.createElement('div');
+  t.className = 'toast toast-' + type;
+  t.textContent = msg; t.onclick = ()=>t.remove();
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 4000);
+}
+</script>
+{% endblock %}

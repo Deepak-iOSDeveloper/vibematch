@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}{% if mode == 'signup' %}Sign Up{% else %}Log In{% endif %} — VibeMatch{% endblock %}
+{% block body %}
+<div style="min-height:100vh;background:#F8F7F4;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'DM Sans',sans-serif;">
+  <div style="background:#fff;border-radius:24px;padding:36px 28px;width:100%;max-width:400px;box-shadow:0 8px 32px rgba(0,0,0,0.10);">
+
+    <a href="{% url 'landing' %}" style="text-decoration:none;">
+      <div style="font-family:'DM Serif Display',serif;font-size:1.6rem;text-align:center;margin-bottom:6px;color:#1A1A18;">Vibe<span style="color:#D4537E;">Match</span></div>
+    </a>
+    <p style="text-align:center;color:#5F5E5A;font-size:0.88rem;margin-bottom:24px;">
+      {% if mode == 'signup' %}Create your personality profile{% else %}Welcome back{% endif %}
+    </p>
+
+    <!-- Mode toggle -->
+    <div style="display:flex;background:#F1EFE8;border-radius:999px;padding:4px;margin-bottom:24px;">
+      <a href="{% url 'signup' %}" style="flex:1;padding:8px;border-radius:999px;text-align:center;text-decoration:none;font-size:0.88rem;font-weight:500;transition:all 0.2s;{% if mode == 'signup' %}background:#fff;color:#1A1A18;box-shadow:0 1px 3px rgba(0,0,0,0.06);{% else %}color:#888780;{% endif %}">Sign Up</a>
+      <a href="{% url 'login' %}" style="flex:1;padding:8px;border-radius:999px;text-align:center;text-decoration:none;font-size:0.88rem;font-weight:500;transition:all 0.2s;{% if mode == 'login' %}background:#fff;color:#1A1A18;box-shadow:0 1px 3px rgba(0,0,0,0.06);{% else %}color:#888780;{% endif %}">Log In</a>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+    {% for message in messages %}
+    <div style="background:{% if message.tags == 'error' %}#FCEBEB{% else %}#E1F5EE{% endif %};color:{% if message.tags == 'error' %}#A32D2D{% else %}#085041{% endif %};border-radius:10px;padding:10px 14px;font-size:0.85rem;margin-bottom:12px;">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+
+    <form method="post" style="display:flex;flex-direction:column;gap:14px;">
+      {% csrf_token %}
+
+      {% if mode == 'signup' %}
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <label style="font-size:0.82rem;font-weight:500;color:#5F5E5A;">Full Name</label>
+        <input type="text" name="full_name" placeholder="Your full name" value="{{ form.full_name.value|default:'' }}" required
+          style="padding:12px 14px;border:1px solid rgba(0,0,0,0.15);border-radius:12px;font-family:'DM Sans',sans-serif;font-size:0.95rem;outline:none;"/>
+      </div>
+      {% endif %}
+
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <label style="font-size:0.82rem;font-weight:500;color:#5F5E5A;">Email Address</label>
+        <input type="email" name="{% if mode == 'signup' %}email{% else %}username{% endif %}" placeholder="your@email.com" required
+          style="padding:12px 14px;border:1px solid rgba(0,0,0,0.15);border-radius:12px;font-family:'DM Sans',sans-serif;font-size:0.95rem;outline:none;"/>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <label style="font-size:0.82rem;font-weight:500;color:#5F5E5A;">Password</label>
+        <input type="password" name="password{% if mode == 'signup' %}1{% endif %}" placeholder="Min. 8 characters" required
+          style="padding:12px 14px;border:1px solid rgba(0,0,0,0.15);border-radius:12px;font-family:'DM Sans',sans-serif;font-size:0.95rem;outline:none;"/>
+      </div>
+
+      {% if mode == 'signup' %}
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <label style="font-size:0.82rem;font-weight:500;color:#5F5E5A;">Confirm Password</label>
+        <input type="password" name="password2" placeholder="Same as above" required
+          style="padding:12px 14px;border:1px solid rgba(0,0,0,0.15);border-radius:12px;font-family:'DM Sans',sans-serif;font-size:0.95rem;outline:none;"/>
+      </div>
+      <div style="background:#E1F5EE;border-radius:10px;padding:12px;font-size:0.82rem;color:#085041;line-height:1.5;">
+        ✓ By signing up, you confirm you are 18+ and a college student in India. You agree to our community guidelines.
+      </div>
+      {% endif %}
+
+      <button type="submit"
+        style="background:#D4537E;color:white;border:none;border-radius:999px;padding:14px;font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:500;cursor:pointer;margin-top:4px;">
+        {% if mode == 'signup' %}Create Account{% else %}Log In{% endif %}
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

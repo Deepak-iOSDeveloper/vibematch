@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}VibeMatch — Connect through conversation{% endblock %}
+{% block body %}
+<div style="min-height:100vh;background:#fff;font-family:'DM Sans',sans-serif;max-width:480px;margin:0 auto;box-shadow:0 0 40px rgba(0,0,0,0.08);">
+  <div style="background:linear-gradient(160deg,#FBEAF0 0%,#fff 60%);padding:60px 24px 48px;text-align:center;">
+    <div style="font-family:'DM Serif Display',serif;font-size:clamp(2rem,8vw,3rem);line-height:1.1;margin-bottom:16px;color:#1A1A18;">
+      Connect through<br><span style="color:#D4537E;font-style:italic;">conversation</span>,<br>not appearance
+    </div>
+    <p style="font-size:1rem;color:#5F5E5A;max-width:300px;margin:0 auto 32px;line-height:1.7;">A dating app for Indian college students. No face swiping. Real connections, built right.</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <a href="{% url 'signup' %}" style="background:#D4537E;color:white;padding:14px 28px;border-radius:999px;text-decoration:none;font-weight:500;font-size:1rem;">Join VibeMatch →</a>
+      <a href="#how" style="background:transparent;color:#1A1A18;padding:14px 28px;border-radius:999px;text-decoration:none;font-weight:500;font-size:1rem;border:1px solid rgba(0,0,0,0.15);">How it works</a>
+    </div>
+    <p style="margin-top:16px;font-size:0.78rem;color:#888780;">18+ · College students · India-wide · Free</p>
+  </div>
+
+  <div style="padding:0 24px 32px;">
+    <div style="background:#fff;border-radius:18px;border:1px solid rgba(0,0,0,0.08);padding:20px;box-shadow:0 4px 16px rgba(0,0,0,0.08);">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <div style="width:52px;height:52px;border-radius:50%;background:#E1F5EE;color:#085041;display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:1.3rem;">A</div>
+        <div>
+          <div style="font-weight:500;">Ananya, 20</div>
+          <div style="font-size:0.82rem;color:#5F5E5A;">BITS Pilani · ECE · 3rd year</div>
+        </div>
+      </div>
+      <div style="background:#F8F7F4;border:1px dashed rgba(0,0,0,0.12);border-radius:10px;padding:12px;text-align:center;font-size:0.82rem;color:#888780;margin-bottom:12px;">🔒 Photo reveals only with mutual consent</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
+        <span style="background:#FBEAF0;color:#72243E;border-radius:999px;padding:4px 10px;font-size:0.78rem;">Stargazing</span>
+        <span style="background:#FBEAF0;color:#72243E;border-radius:999px;padding:4px 10px;font-size:0.78rem;">Research</span>
+        <span style="background:#E6F1FB;color:#0C447C;border-radius:999px;padding:4px 10px;font-size:0.78rem;">Indie music</span>
+        <span style="background:#FBEAF0;color:#72243E;border-radius:999px;padding:4px 10px;font-size:0.78rem;">Philosophy</span>
+      </div>
+      <div style="margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:4px;"><span style="color:#5F5E5A;">Vibe Score</span><span style="color:#D4537E;font-weight:500;">82%</span></div>
+        <div style="height:5px;background:#F1EFE8;border-radius:999px;overflow:hidden;"><div style="width:82%;height:100%;background:linear-gradient(90deg,#ED93B1,#D4537E);border-radius:999px;"></div></div>
+      </div>
+      <div style="background:#FBEAF0;border-radius:10px;padding:12px;font-size:0.88rem;color:#72243E;font-style:italic;">"I once debugged for 6 hours before realising I'd misspelled a variable name 😅"</div>
+    </div>
+  </div>
+
+  <div id="how" style="padding:0 24px 48px;">
+    <h2 style="font-family:'DM Serif Display',serif;font-size:1.8rem;text-align:center;margin-bottom:32px;font-weight:normal;">How VibeMatch works</h2>
+    {% for num,title,desc in steps %}
+    <div style="display:flex;gap:16px;margin-bottom:24px;">
+      <div style="width:44px;height:44px;border-radius:50%;background:#FBEAF0;color:#72243E;display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:0.9rem;flex-shrink:0;">0{{num}}</div>
+      <div><div style="font-weight:500;margin-bottom:4px;">{{title}}</div><div style="font-size:0.88rem;color:#5F5E5A;line-height:1.6;">{{desc}}</div></div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div style="padding:48px 24px;text-align:center;background:#FBEAF0;">
+    <h2 style="font-family:'DM Serif Display',serif;font-size:1.8rem;margin-bottom:12px;font-weight:normal;">Ready to find your vibe?</h2>
+    <p style="color:#5F5E5A;margin-bottom:24px;">Join Indian students already on VibeMatch</p>
+    <a href="{% url 'signup' %}" style="background:#D4537E;color:white;padding:16px 32px;border-radius:999px;text-decoration:none;font-weight:500;font-size:1rem;">Create your profile →</a>
+  </div>
+
+  <div style="padding:24px;text-align:center;border-top:1px solid rgba(0,0,0,0.08);">
+    <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:6px;">Vibe<span style="color:#D4537E;">Match</span></div>
+    <p style="font-size:0.75rem;color:#888780;margin-bottom:8px;">For Indian college students · 18+ only · Ethical by design</p>
+    <a href="{% url 'login' %}" style="font-size:0.82rem;color:#D4537E;text-decoration:none;">Already have an account? Log in</a>
+  </div>
+</div>
+{% endblock %}

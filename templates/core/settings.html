@@ -1,0 +1,54 @@
+{% extends "app_base.html" %}
+{% block title %}Settings — VibeMatch{% endblock %}
+
+{% block top_nav_actions %}
+<a href="{% url 'profile' %}" style="font-size:0.82rem;color:#5F5E5A;text-decoration:none;">← Profile</a>
+{% endblock %}
+
+{% block content %}
+<div style="padding:20px 16px;display:flex;flex-direction:column;gap:20px;">
+
+  <div style="background:#fff;border-radius:16px;border:1px solid rgba(0,0,0,0.08);padding:16px;">
+    <div style="font-size:0.78rem;font-weight:500;color:#888780;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.04em;">Account</div>
+    {% for label,val in account_items %}
+    <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid rgba(0,0,0,0.06);margin-bottom:10px;">
+      <span style="font-size:0.88rem;color:#5F5E5A;">{{ label }}</span>
+      <span style="font-size:0.88rem;color:#1A1A18;">{{ val|default:"—" }}</span>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div style="background:#E1F5EE;border:1px solid rgba(29,158,117,0.2);border-radius:16px;padding:16px;">
+    <div style="font-size:0.78rem;font-weight:500;color:#085041;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.04em;">Community Guidelines</div>
+    <ul style="padding-left:16px;display:flex;flex-direction:column;gap:6px;">
+      <li style="font-size:0.83rem;color:#085041;line-height:1.5;">Be respectful and kind in all conversations</li>
+      <li style="font-size:0.83rem;color:#085041;line-height:1.5;">Do not share personal info until you feel safe</li>
+      <li style="font-size:0.83rem;color:#085041;line-height:1.5;">Use the report button for any harassment immediately</li>
+      <li style="font-size:0.83rem;color:#085041;line-height:1.5;">No explicit or sexual content — this is a safe space</li>
+      <li style="font-size:0.83rem;color:#085041;line-height:1.5;">Ghosting is discouraged. Use the vibe check to communicate</li>
+      <li style="font-size:0.83rem;color:#085041;line-height:1.5;">Fake profiles will be permanently banned</li>
+    </ul>
+  </div>
+
+  <div style="background:#fff;border-radius:16px;border:1px solid rgba(0,0,0,0.08);padding:16px;">
+    <div style="font-size:0.78rem;font-weight:500;color:#888780;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.04em;">Privacy & Safety</div>
+    <p style="font-size:0.88rem;color:#5F5E5A;line-height:1.7;margin-bottom:10px;">VibeMatch does not sell your data. Your chat history is private. Photos are only revealed with mutual consent from both users.</p>
+    <p style="font-size:0.85rem;color:#5F5E5A;"><strong style="color:#1A1A18;">Data requests:</strong> Contact privacy@vibematch.in for a copy of your data or account deletion.</p>
+  </div>
+
+  <div style="background:#fff;border-radius:16px;border:1px solid rgba(226,75,74,0.2);padding:16px;">
+    <div style="font-size:0.78rem;font-weight:500;color:#A32D2D;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.04em;">Account Actions</div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <a href="{% url 'logout' %}" style="display:block;text-align:center;padding:12px;border:1px solid rgba(0,0,0,0.15);border-radius:999px;text-decoration:none;color:#1A1A18;font-size:0.9rem;font-weight:500;">Sign out</a>
+      <button onclick="if(confirm('Deactivate your account? Your profile will be hidden.'))window.location='/auth/deactivate/'"
+        style="padding:12px;background:rgba(226,75,74,0.08);color:#A32D2D;border:1px solid rgba(226,75,74,0.2);border-radius:999px;font-family:'DM Sans',sans-serif;font-size:0.9rem;cursor:pointer;">
+        Deactivate account
+      </button>
+    </div>
+  </div>
+
+  <div style="text-align:center;font-size:0.75rem;color:#888780;padding-bottom:8px;">
+    VibeMatch v1.0 · For Indian college students · 18+ only<br>Made with 🤍 for meaningful connections
+  </div>
+</div>
+{% endblock %}

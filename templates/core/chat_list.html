@@ -1,0 +1,118 @@
+{% extends "app_base.html" %}
+{% block title %}Chats — VibeMatch{% endblock %}
+
+{% block top_nav_actions %}
+{% if starters %}<div style="background:#D4537E;color:white;border-radius:999px;padding:4px 10px;font-size:0.78rem;font-weight:500;">{{ starters|length }} new</div>{% endif %}
+{% endblock %}
+
+{% block content %}
+<!-- Tabs -->
+<div style="display:flex;border-bottom:1px solid rgba(0,0,0,0.08);">
+  <button onclick="showTab('chats')" id="tab-chats"
+    style="flex:1;padding:14px;border:none;background:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;color:#D4537E;border-bottom:2px solid #D4537E;transition:all 0.15s;">
+    Chats {% if conn_data %}({{ conn_data|length }}){% endif %}
+  </button>
+  <button onclick="showTab('starters')" id="tab-starters"
+    style="flex:1;padding:14px;border:none;background:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:400;color:#888780;border-bottom:2px solid transparent;transition:all 0.15s;">
+    Requests {% if starters %}({{ starters|length }}){% endif %}
+  </button>
+</div>
+
+<!-- Chats panel -->
+<div id="panel-chats">
+  {% if not conn_data %}
+  <div style="text-align:center;padding:64px 24px;color:#888780;">
+    <div style="font-size:2.5rem;margin-bottom:12px;">💬</div>
+    <div style="font-weight:500;font-size:1rem;color:#1A1A18;margin-bottom:6px;">No chats yet</div>
+    <p style="font-size:0.88rem;">Start a conversation from the Discover tab!</p>
+    <a href="{% url 'discover' %}" style="display:inline-block;margin-top:16px;padding:10px 20px;background:#D4537E;color:white;border-radius:999px;text-decoration:none;font-size:0.85rem;font-weight:500;">Go to Discover</a>
+  </div>
+  {% endif %}
+
+  {% for item in conn_data %}
+  {% with conn=item.conn other=item.other unread=item.unread %}
+  <a href="{% url 'chat' conn.id %}" style="padding:14px 16px;border-bottom:1px solid rgba(0,0,0,0.06);display:flex;gap:12px;cursor:pointer;text-decoration:none;color:inherit;transition:background 0.15s;{% if unread %}background:#FBEAF0;{% endif %}"
+    onmouseover="this.style.background='#F8F7F4'" onmouseout="this.style.background='{% if unread %}#FBEAF0{% else %}transparent{% endif %}'">
+    <div class="avatar" style="background:{{ other.avatar_color }}22;color:{{ other.avatar_color }};flex-shrink:0;">
+      {{ other.avatar_initials|default:other.full_name.0 }}
+    </div>
+    <div style="flex:1;min-width:0;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+        <div style="font-weight:{% if unread %}600{% else %}500{% endif %};font-size:0.95rem;">
+          {{ other.full_name }}
+          {% if conn.status == 'matched' %}<span class="badge" style="background:#FAEEDA;color:#633806;margin-left:6px;">💕 Matched</span>{% endif %}
+          {% if conn.status == 'friends' %}<span class="badge" style="background:#E6F1FB;color:#0C447C;margin-left:6px;">👋 Friends</span>{% endif %}
+          {% if conn.status == 'vibe_check' %}<span class="badge" style="background:#FAEEDA;color:#633806;margin-left:6px;">🎯 Vibe Check!</span>{% endif %}
+        </div>
+        <div style="font-size:0.75rem;color:#888780;flex-shrink:0;">
+          {% if conn.last_message_at %}{{ conn.last_message_at|timesince }} ago{% endif %}
+        </div>
+      </div>
+      <div style="font-size:0.83rem;color:#5F5E5A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+        {{ conn.last_message_preview|default:"Start the conversation!" }}
+      </div>
+      {% with days=conn.days_until_vibe_check %}
+      {% if days is not None and days <= 3 and conn.status == 'chatting' %}
+      <div style="font-size:0.72rem;color:#D4537E;margin-top:3px;">⏰ Vibe check in {{ days }} day{{ days|pluralize }}</div>
+      {% endif %}
+      {% endwith %}
+    </div>
+    {% if unread %}
+    <div style="width:20px;height:20px;border-radius:50%;background:#D4537E;color:white;font-size:0.65rem;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;align-self:center;">{{ unread }}</div>
+    {% endif %}
+  </a>
+  {% endwith %}
+  {% endfor %}
+</div>
+
+<!-- Starters panel -->
+<div id="panel-starters" style="display:none;">
+  {% if not starters %}
+  <div style="text-align:center;padding:64px 24px;color:#888780;">
+    <div style="font-size:2.5rem;margin-bottom:12px;">✉</div>
+    <div style="font-weight:500;font-size:1rem;color:#1A1A18;margin-bottom:6px;">No new requests</div>
+    <p style="font-size:0.88rem;">When someone sends you a conversation starter, it'll appear here</p>
+  </div>
+  {% endif %}
+
+  {% for starter in starters %}
+  <div style="padding:16px;border-bottom:1px solid rgba(0,0,0,0.06);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+      <div class="avatar" style="background:{{ starter.from_user.avatar_color }}22;color:{{ starter.from_user.avatar_color }};">
+        {{ starter.from_user.avatar_initials|default:starter.from_user.full_name.0 }}
+      </div>
+      <div style="flex:1;">
+        <div style="font-weight:500;">{{ starter.from_user.full_name }}</div>
+        <div style="font-size:0.8rem;color:#5F5E5A;">{{ starter.from_user.college_name }} · {{ starter.from_user.get_stream_display }}</div>
+      </div>
+      <div style="font-size:0.75rem;color:#888780;">{{ starter.created_at|timesince }} ago</div>
+    </div>
+    <div style="background:#FBEAF0;border-radius:10px;padding:12px;font-size:0.88rem;color:#72243E;font-style:italic;line-height:1.6;margin-bottom:12px;">"{{ starter.starter_text }}"</div>
+    <div style="display:flex;gap:10px;">
+      <form method="post" action="{% url 'accept_starter' starter.id %}" style="flex:1;">
+        {% csrf_token %}
+        <button type="submit" style="width:100%;background:#D4537E;color:white;border:none;border-radius:999px;padding:11px;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer;">Accept & Chat</button>
+      </form>
+      <form method="post" action="{% url 'decline_starter' starter.id %}">
+        {% csrf_token %}
+        <button type="submit" style="padding:11px 18px;background:transparent;color:#5F5E5A;border:1px solid rgba(0,0,0,0.15);border-radius:999px;font-family:'DM Sans',sans-serif;font-size:0.88rem;cursor:pointer;">Decline</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<script>
+function showTab(tab){
+  document.getElementById('panel-chats').style.display = tab==='chats' ? 'block' : 'none';
+  document.getElementById('panel-starters').style.display = tab==='starters' ? 'block' : 'none';
+  document.getElementById('tab-chats').style.color = tab==='chats' ? '#D4537E' : '#888780';
+  document.getElementById('tab-chats').style.borderBottomColor = tab==='chats' ? '#D4537E' : 'transparent';
+  document.getElementById('tab-chats').style.fontWeight = tab==='chats' ? '500' : '400';
+  document.getElementById('tab-starters').style.color = tab==='starters' ? '#D4537E' : '#888780';
+  document.getElementById('tab-starters').style.borderBottomColor = tab==='starters' ? '#D4537E' : 'transparent';
+  document.getElementById('tab-starters').style.fontWeight = tab==='starters' ? '500' : '400';
+}
+{% if starters %}showTab('starters');{% endif %}
+</script>
+{% endblock %}

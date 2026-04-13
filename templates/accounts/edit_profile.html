@@ -1,0 +1,89 @@
+{% extends "app_base.html" %}
+{% block title %}Edit Profile — VibeMatch{% endblock %}
+
+{% block top_nav_actions %}
+<a href="{% url 'profile' %}" style="font-size:0.82rem;color:#5F5E5A;text-decoration:none;">Cancel</a>
+<button type="submit" form="edit-form" style="padding:7px 16px;background:#D4537E;color:white;border:none;border-radius:999px;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:500;cursor:pointer;">Save</button>
+{% endblock %}
+
+{% block content %}
+{% if messages %}
+<div style="padding:12px 16px 0;">
+  {% for message in messages %}
+  <div style="background:{% if message.tags == 'error' %}#FCEBEB{% else %}#E1F5EE{% endif %};color:{% if message.tags == 'error' %}#A32D2D{% else %}#085041{% endif %};border-radius:10px;padding:10px 14px;font-size:0.85rem;margin-bottom:8px;">{{ message }}</div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data" id="edit-form" style="padding:20px 16px;display:flex;flex-direction:column;gap:16px;">
+  {% csrf_token %}
+
+  <div class="field-group">
+    <label>Icebreaker <span style="color:#888780;">(max 200 chars)</span></label>
+    <textarea name="icebreaker" maxlength="200" rows="3">{{ user.icebreaker }}</textarea>
+  </div>
+
+  <div class="field-group">
+    <label>About you <span style="color:#888780;">(max 300 chars)</span></label>
+    <textarea name="bio" maxlength="300" rows="3">{{ user.bio }}</textarea>
+  </div>
+
+  <div class="field-group">
+    <label>Interests <span style="color:#888780;">(3–8)</span></label>
+    <div class="chip-group" style="gap:8px;">
+      {% for val,label in form.fields.interests_list.choices %}
+      <label class="chip-label">
+        <input type="checkbox" name="interests_list" value="{{ val }}" {% if val in user.get_interests_list %}checked{% endif %} hidden/>
+        <span class="chip {% if val in user.get_interests_list %}chip-selected{% endif %}">{{ label }}</span>
+      </label>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="field-group">
+    <label>Love Language</label>
+    <select name="love_language">
+      {% for val,label in form.fields.love_language.choices %}
+      {% if val %}<option value="{{ val }}" {% if user.love_language == val %}selected{% endif %}>{{ label }}</option>{% endif %}
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="field-group">
+    <label>Humor Style</label>
+    <select name="humor_style">
+      {% for val,label in form.fields.humor_style.choices %}
+      {% if val %}<option value="{{ val }}" {% if user.humor_style == val %}selected{% endif %}>{{ label }}</option>{% endif %}
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="field-group">
+    <label>Looking for</label>
+    <select name="relationship_goal">
+      {% for val,label in form.fields.relationship_goal.choices %}
+      {% if val %}<option value="{{ val }}" {% if user.relationship_goal == val %}selected{% endif %}>{{ label }}</option>{% endif %}
+      {% endfor %}
+    </select>
+  </div>
+
+  <label style="display:flex;align-items:center;gap:12px;cursor:pointer;">
+    <input type="checkbox" name="long_distance_ready" {% if user.long_distance_ready %}checked{% endif %} style="width:18px;height:18px;accent-color:#D4537E;cursor:pointer;"/>
+    <span style="font-size:0.9rem;">Open to long-distance connections</span>
+  </label>
+
+  <div class="field-group">
+    <label>Profile Photo <span style="color:#888780;">(optional — revealed only with mutual consent)</span></label>
+    <input type="file" name="photo" accept="image/*" style="padding:10px;border:1px solid rgba(0,0,0,0.15);border-radius:10px;font-family:'DM Sans',sans-serif;"/>
+    {% if user.photo %}<div style="font-size:0.8rem;color:#1D9E75;margin-top:4px;">✓ Photo uploaded</div>{% endif %}
+  </div>
+</form>
+
+<script>
+document.querySelectorAll('.chip-label input[type="checkbox"]').forEach(input => {
+  input.addEventListener('change', () => {
+    input.closest('.chip-label').querySelector('.chip').classList.toggle('chip-selected', input.checked);
+  });
+});
+</script>
+{% endblock %}

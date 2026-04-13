@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% block title %}Chat with {{ other.full_name }} — VibeMatch{% endblock %}
+{% block body %}
+<div style="display:flex;flex-direction:column;height:100vh;background:#fff;max-width:480px;margin:0 auto;font-family:'DM Sans',sans-serif;box-shadow:0 0 40px rgba(0,0,0,0.08);">
+
+  <!-- Header -->
+  <div style="padding:12px 16px;background:#fff;border-bottom:1px solid rgba(0,0,0,0.08);display:flex;gap:12px;align-items:center;flex-shrink:0;position:relative;">
+    <a href="{% url 'chat_list' %}" style="color:#5F5E5A;text-decoration:none;display:flex;align-items:center;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    </a>
+    <div class="avatar avatar-sm" style="background:{{ other.avatar_color }}22;color:{{ other.avatar_color }};">{{ other.avatar_initials|default:other.full_name.0 }}</div>
+    <div style="flex:1;">
+      <div style="font-weight:500;font-size:0.95rem;">{{ other.full_name }}</div>
+      <div style="font-size:0.75rem;color:#888780;">{{ other.college_name }} · Day {{ conn.days_active }}</div>
+    </div>
+    <button onclick="document.getElementById('menu').classList.toggle('hidden')" style="background:none;border:none;cursor:pointer;color:#5F5E5A;padding:4px;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+    </button>
+    <div id="menu" class="hidden" style="position:absolute;right:12px;top:100%;background:#fff;border:1px solid rgba(0,0,0,0.1);border-radius:12px;padding:8px 0;z-index:100;min-width:180px;box-shadow:0 4px 16px rgba(0,0,0,0.1);">
+      {% if not conn.photos_revealed %}
+      <button onclick="requestReveal();document.getElementById('menu').classList.add('hidden')" style="width:100%;padding:10px 16px;text-align:left;background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.88rem;color:#1A1A18;">📸 Request photo reveal</button>
+      {% endif %}
+      <button onclick="document.getElementById('report-modal').style.display='flex';document.getElementById('menu').classList.add('hidden')" style="width:100%;padding:10px 16px;text-align:left;background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.88rem;color:#E24B4A;">🚩 Report</button>
+      <button onclick="if(confirm('Block this user?'))blockUser()" style="width:100%;padding:10px 16px;text-align:left;background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.88rem;color:#E24B4A;">🚫 Block</button>
+    </div>
+  </div>
+
+  <!-- Status banners -->
+  {% if conn.status == 'matched' %}
+  <div style="background:#EAF3DE;color:#27500A;text-align:center;padding:8px;font-size:0.88rem;font-weight:500;flex-shrink:0;">💕 You're matched! Keep the conversation going.</div>
+  {% elif conn.status == 'friends' %}
+  <div style="background:#E6F1FB;color:#0C447C;text-align:center;padding:8px;font-size:0.88rem;font-weight:500;flex-shrink:0;">👋 You chose to stay as friends. That's valuable too!</div>
+  {% endif %}
+  {% if photos_revealed %}
+  <div style="background:#FBEAF0;color:#72243E;text-align:center;padding:8px;font-size:0.82rem;flex-shrink:0;">📸 Photos are now visible to both of you</div>
+  {% endif %}
+
+  <!-- Messages -->
+  <div id="messages-container" style="flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:8px;" onclick="document.getElementById('menu').classList.add('hidden')">
+    {% if not messages %}
+    <div style="text-align:center;padding:48px 24px;color:#888780;">
+      <div style="font-size:2rem;margin-bottom:12px;">💬</div>
+      <div style="font-weight:500;color:#1A1A18;margin-bottom:6px;">Conversation started!</div>
+      <p style="font-size:0.88rem;line-height:1.6;">Say something genuine. This is the beginning of a real connection.</p>
+    </div>
+    {% endif %}
+
+    {% for msg in messages %}
+    {% if not msg.is_deleted %}
+      {% if msg.message_type == 'system' %}
+      <div style="text-align:center;font-size:0.8rem;color:#888780;padding:4px 12px;background:#F1EFE8;border-radius:999px;align-self:center;max-width:90%;">{{ msg.content }}</div>
+      {% else %}
+      <div style="display:flex;flex-direction:column;max-width:78%;{% if msg.sender == request.user %}align-self:flex-end;align-items:flex-end;{% else %}align-self:flex-start;align-items:flex-start;{% endif %}gap:3px;" data-msg-id="{{ msg.id }}">
+        <div style="padding:10px 14px;border-radius:16px;font-size:0.9rem;line-height:1.5;word-break:break-word;{% if msg.sender == request.user %}background:#D4537E;color:white;border-bottom-right-radius:4px;{% else %}background:#F1EFE8;color:#1A1A18;border-bottom-left-radius:4px;{% endif %}">{{ msg.content }}</div>
+        <div style="font-size:0.72rem;color:#888780;padding:0 4px;">{{ msg.created_at|time:"g:i A" }}</div>
+      </div>
+      {% endif %}
+    {% endif %}
+    {% endfor %}
+    <div id="messages-bottom"></div>
+  </div>
+
+  <!-- Vibe Check Card -->
+  {% if show_vibe_check %}
+  <div style="margin:0 16px 8px;background:#FBEAF0;border:1px solid #F4C0D1;border-radius:16px;padding:16px;text-align:center;flex-shrink:0;">
+    <div style="font-size:1.2rem;margin-bottom:6px;">🎯</div>
+    <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:#4B1528;margin-bottom:6px;">7-Day Vibe Check!</div>
+    <p style="font-size:0.85rem;color:#72243E;margin-bottom:14px;line-height:1.5;">You've been talking for 7 days. How do you want to continue with {{ other.first_name }}?</p>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <button onclick="submitVibeCheck('explore_more')" style="background:#D4537E;color:white;border:none;border-radius:999px;padding:11px;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer;">💕 Explore more — this feels right</button>
+      <button onclick="submitVibeCheck('stay_friends')" style="background:#FBEAF0;color:#72243E;border:1px solid #F4C0D1;border-radius:999px;padding:11px;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer;">👋 Stay friends, nothing more</button>
+      <button onclick="submitVibeCheck('end')" style="background:transparent;color:#888780;border:none;border-radius:999px;padding:11px;font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;">Part ways gracefully</button>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if my_vibe_response and not conn.vibe_check_resolved %}
+  <div style="margin:0 16px 8px;background:#E1F5EE;border-radius:10px;padding:12px;text-align:center;font-size:0.85rem;color:#085041;flex-shrink:0;">
+    ✓ Your response saved. Waiting for {{ other.first_name }}'s response...
+  </div>
+  {% endif %}
+
+  <!-- Input -->
+  <div style="padding:12px 16px;background:#fff;border-top:1px solid rgba(0,0,0,0.08);flex-shrink:0;">
+    <div style="display:flex;gap:10px;align-items:flex-end;">
+      <textarea id="msg-input" placeholder="Say something genuine..." maxlength="1000" rows="1"
+        style="flex:1;min-height:44px;max-height:120px;resize:none;border-radius:22px;padding:11px 16px;border:1px solid rgba(0,0,0,0.15);font-family:'DM Sans',sans-serif;font-size:0.92rem;outline:none;line-height:1.4;overflow-y:auto;"
+        oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
+      <button id="send-btn" onclick="sendMessage()"
+        style="width:44px;height:44px;border-radius:50%;border:none;background:#D4537E;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.15s;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Report Modal -->
+<div id="report-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:flex-end;justify-content:center;">
+  <div style="background:#fff;border-radius:24px 24px 0 0;padding:24px 20px 32px;width:100%;max-width:480px;">
+    <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;font-weight:normal;margin-bottom:16px;">🚩 Report User</h3>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;">
+      <label style="font-size:0.82rem;font-weight:500;color:#5F5E5A;">Reason</label>
+      <select id="report-reason" style="padding:10px 14px;border:1px solid rgba(0,0,0,0.15);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.88rem;">
+        <option value="">Select a reason</option>
+        <option value="harassment">Harassment or bullying</option>
+        <option value="inappropriate_content">Inappropriate content</option>
+        <option value="fake_profile">Fake profile</option>
+        <option value="spam">Spam</option>
+        <option value="underage">Appears to be underage</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">
+      <label style="font-size:0.82rem;font-weight:500;color:#5F5E5A;">Details (optional)</label>
+      <textarea id="report-details" rows="3" placeholder="Describe what happened..." style="padding:10px 14px;border:1px solid rgba(0,0,0,0.15);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.88rem;resize:none;outline:none;"></textarea>
+    </div>
+    <div style="display:flex;gap:12px;">
+      <button onclick="submitReport()" style="flex:1;background:#E24B4A;color:white;border:none;border-radius:999px;padding:12px;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer;">Submit Report</button>
+      <button onclick="document.getElementById('report-modal').style.display='none'" style="padding:12px 18px;background:transparent;border:1px solid rgba(0,0,0,0.15);border-radius:999px;font-family:'DM Sans',sans-serif;font-size:0.88rem;cursor:pointer;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const connectionId = {{ conn.id }};
+const currentUserId = {{ request.user.id }};
+const currentUserInitials = "{{ request.user.avatar_initials|default:request.user.full_name.0 }}";
+const currentUserColor = "{{ request.user.avatar_color }}";
+const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+const ws = new WebSocket(`${wsProtocol}//${window.location.host}/ws/chat/${connectionId}/`);
+
+ws.onmessage = (e) => {
+  const data = JSON.parse(e.data);
+  if(data.type === 'chat_message') appendMessage(data);
+};
+
+ws.onclose = () => console.log('WS disconnected');
+
+function appendMessage(data){
+  const container = document.getElementById('messages-container');
+  const isMine = data.sender_id === currentUserId;
+  const wrap = document.createElement('div');
+  wrap.style.cssText = `display:flex;flex-direction:column;max-width:78%;${isMine ? 'align-self:flex-end;align-items:flex-end;' : 'align-self:flex-start;align-items:flex-start;'}gap:3px;`;
+  const bubble = document.createElement('div');
+  bubble.style.cssText = `padding:10px 14px;border-radius:16px;font-size:0.9rem;line-height:1.5;word-break:break-word;${isMine ? 'background:#D4537E;color:white;border-bottom-right-radius:4px;' : 'background:#F1EFE8;color:#1A1A18;border-bottom-left-radius:4px;'}`;
+  bubble.textContent = data.content;
+  const time = document.createElement('div');
+  time.style.cssText = 'font-size:0.72rem;color:#888780;padding:0 4px;';
+  const d = new Date(data.created_at);
+  time.textContent = d.toLocaleTimeString('en-IN', {hour:'numeric', minute:'2-digit'});
+  wrap.appendChild(bubble); wrap.appendChild(time);
+  container.insertBefore(wrap, document.getElementById('messages-bottom'));
+  document.getElementById('messages-bottom').scrollIntoView({behavior:'smooth'});
+}
+
+function sendMessage(){
+  const input = document.getElementById('msg-input');
+  const content = input.value.trim();
+  if(!content || ws.readyState !== WebSocket.OPEN) return;
+  ws.send(JSON.stringify({type:'message', content}));
+  input.value = ''; input.style.height = 'auto';
+}
+
+document.getElementById('msg-input').addEventListener('keydown', (e) => {
+  if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(); }
+});
+
+function submitVibeCheck(response){
+  fetch(`/chats/${connectionId}/vibe-check/`, {
+    method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},
+    body: JSON.stringify({response})
+  }).then(r=>r.json()).then(d=>{
+    if(d.success) location.reload();
+  });
+}
+
+function requestReveal(){
+  fetch(`/chats/${connectionId}/reveal/`, {
+    method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},
+    body: JSON.stringify({})
+  }).then(r=>r.json()).then(d=>{
+    if(d.success){
+      if(d.revealed) { alert('Photos revealed for both of you! 📸'); location.reload(); }
+      else alert('Reveal request sent! Waiting for their consent.');
+    }
+  });
+}
+
+function submitReport(){
+  const reason = document.getElementById('report-reason').value;
+  const details = document.getElementById('report-details').value;
+  if(!reason){ alert('Please select a reason'); return; }
+  fetch('/report/', {
+    method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},
+    body: JSON.stringify({reported_id: {{ other.id }}, reason, details, connection_id: connectionId})
+  }).then(r=>r.json()).then(d=>{
+    document.getElementById('report-modal').style.display='none';
+    alert('Report submitted. Our team will review it within 24 hours.');
+  });
+}
+
+function blockUser(){
+  fetch('/block/', {
+    method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},
+    body: JSON.stringify({blocked_id: {{ other.id }} })
+  }).then(()=>{ window.location.href = '{% url "chat_list" %}'; });
+}
+
+// Scroll to bottom on load
+document.getElementById('messages-bottom').scrollIntoView();
+</script>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "app_base.html" %}
+{% block title %}Profile — VibeMatch{% endblock %}
+
+{% block top_nav_actions %}
+<a href="{% url 'edit_profile' %}" class="icon-btn" style="padding:7px 14px;border-radius:999px;border:1px solid rgba(0,0,0,0.15);font-size:0.82rem;font-weight:500;text-decoration:none;color:#1A1A18;">Edit</a>
+<a href="{% url 'settings' %}" class="icon-btn">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+</a>
+{% endblock %}
+
+{% block content %}
+{% with u=profile_user %}
+<div style="padding:24px 16px;display:flex;flex-direction:column;gap:20px;">
+  <!-- Avatar & Identity -->
+  <div style="text-align:center;">
+    <div class="avatar avatar-xl" style="margin:0 auto 12px;background:{{ u.avatar_color }}22;color:{{ u.avatar_color }};font-size:2rem;">
+      {{ u.avatar_initials|default:u.full_name.0 }}
+    </div>
+    <h2 style="font-family:'DM Serif Display',serif;font-size:1.5rem;font-weight:normal;margin-bottom:4px;">{{ u.full_name }}{% if u.age %}, {{ u.age }}{% endif %}</h2>
+    <div style="color:#5F5E5A;font-size:0.9rem;margin-bottom:8px;">{{ u.college_name }} · {{ u.get_stream_display }} · Year {{ u.year_of_study }}</div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+      {% if u.is_verified %}<span class="badge badge-verified">✓ Verified Student</span>{% endif %}
+      {% if u.city %}<span class="badge" style="background:#F1EFE8;color:#444441;">📍 {{ u.city }}, {{ u.state }}</span>{% endif %}
+      {% if u.long_distance_ready %}<span class="badge" style="background:#E6F1FB;color:#0C447C;">✈ Long distance ok</span>{% endif %}
+    </div>
+  </div>
+
+  <div style="background:#F8F7F4;border:1px dashed rgba(0,0,0,0.12);border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:center;gap:8px;color:#888780;font-size:0.82rem;text-align:center;line-height:1.5;">
+    🔒 Your photo is hidden until both parties mutually request a reveal
+  </div>
+
+  <div style="background:#fff;border-radius:16px;border:1px solid rgba(0,0,0,0.08);padding:16px;">
+    <div style="font-size:0.78rem;font-weight:500;color:#888780;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em;">Icebreaker</div>
+    <div style="font-style:italic;color:#1A1A18;line-height:1.7;font-size:0.95rem;">"{{ u.icebreaker|default:'No icebreaker yet.' }}"</div>
+  </div>
+
+  {% if u.bio %}
+  <div style="background:#fff;border-radius:16px;border:1px solid rgba(0,0,0,0.08);padding:16px;">
+    <div style="font-size:0.78rem;font-weight:500;color:#888780;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em;">About</div>
+    <p style="font-size:0.9rem;color:#1A1A18;line-height:1.7;">{{ u.bio }}</p>
+  </div>
+  {% endif %}
+
+  <div style="background:#fff;border-radius:16px;border:1px solid rgba(0,0,0,0.08);padding:16px;">
+    <div style="font-size:0.78rem;font-weight:500;color:#888780;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.04em;">Personality</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      {% for label,val in personality_items %}
+      <div style="background:#F8F7F4;border-radius:10px;padding:10px;">
+        <div style="font-size:0.72rem;color:#888780;margin-bottom:4px;">{{ label }}</div>
+        <div style="font-weight:500;font-size:0.88rem;color:#1A1A18;">{{ val|default:"—" }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div style="background:#fff;border-radius:16px;border:1px solid rgba(0,0,0,0.08);padding:16px;">
+    <div style="font-size:0.78rem;font-weight:500;color:#888780;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.04em;">Interests</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;">
+      {% for interest in u.get_interests_list %}
+      <span style="background:#FBEAF0;color:#72243E;border-radius:999px;padding:4px 10px;font-size:0.78rem;font-weight:500;">{{ interest }}</span>
+      {% empty %}
+      <span style="color:#888780;font-size:0.88rem;">No interests added yet</span>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endwith %}
+{% endblock %}

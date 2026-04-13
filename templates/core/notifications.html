@@ -1,0 +1,37 @@
+{% extends "app_base.html" %}
+{% block title %}Notifications — VibeMatch{% endblock %}
+
+{% block content %}
+<div style="padding:8px 0;">
+  {% if not notifications %}
+  <div style="text-align:center;padding:64px 24px;color:#888780;">
+    <div style="font-size:2.5rem;margin-bottom:12px;">🔔</div>
+    <div style="font-weight:500;font-size:1rem;color:#1A1A18;margin-bottom:6px;">No notifications yet</div>
+    <p style="font-size:0.88rem;">When someone sends you a starter or message, you'll see it here</p>
+  </div>
+  {% endif %}
+
+  {% for notif in notifications %}
+  {% with icons="new_starter:✉,new_message:💬,vibe_check:🎯,reveal_request:📸,reveal_accepted:✅,match:💕,system:🔔" %}
+  <div style="padding:14px 16px;display:flex;gap:12px;align-items:flex-start;border-bottom:1px solid rgba(0,0,0,0.06);cursor:pointer;{% if not notif.is_read %}background:#FBEAF0;{% endif %}"
+    onclick="{% if notif.connection %}window.location='{% url 'chat' 0 %}'.replace('0','{{ notif.connection.id }}'){% endif %}">
+    <div style="width:40px;height:40px;border-radius:50%;{% if not notif.is_read %}background:#F4C0D1;{% else %}background:#F1EFE8;{% endif %}display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">
+      {% if notif.notif_type == 'new_starter' %}✉
+      {% elif notif.notif_type == 'new_message' %}💬
+      {% elif notif.notif_type == 'vibe_check' %}🎯
+      {% elif notif.notif_type == 'reveal_request' %}📸
+      {% elif notif.notif_type == 'reveal_accepted' %}✅
+      {% elif notif.notif_type == 'match' %}💕
+      {% else %}🔔{% endif %}
+    </div>
+    <div style="flex:1;min-width:0;">
+      <div style="font-weight:{% if not notif.is_read %}500{% else %}400{% endif %};font-size:0.9rem;margin-bottom:2px;">{{ notif.title }}</div>
+      {% if notif.body %}<div style="font-size:0.82rem;color:#5F5E5A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ notif.body }}</div>{% endif %}
+      <div style="font-size:0.72rem;color:#888780;margin-top:3px;">{{ notif.created_at|timesince }} ago</div>
+    </div>
+    {% if not notif.is_read %}<div style="width:8px;height:8px;border-radius:50%;background:#D4537E;flex-shrink:0;margin-top:6px;"></div>{% endif %}
+  </div>
+  {% endwith %}
+  {% endfor %}
+</div>
+{% endblock %}
